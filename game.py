@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import time
 
 pygame.init()
 
@@ -8,7 +9,9 @@ pygame.init()
 screen_width = 800
 screen_height = 600
 screen = pygame.display.set_mode((screen_width, screen_height))
+
 pygame.display.set_caption("Simple Shooter Game")
+font = pygame.font.SysFont('Arial', 12)
 
 # Player settings
 player_width = 50
@@ -31,11 +34,25 @@ enemies = []
 
 enemy_timer = 0
 enemy_spawn_time = 2000
+score = 0
+health = 3
+pygame.mixer.music.load('sound/laser.mp3')
 
 clock = pygame.time.Clock()
 
 def check_collision(rect1, rect2):
     return rect1.colliderect(rect2)
+
+# Game over
+def show_game_over(screen):
+    gameOver = pygame.mixer.Sound('sound/game_over.mp3')
+    gameOver.play()
+    font = pygame.font.Font(None, 50)
+    text = font.render("Game Over", True, (255, 0, 0))
+    screen.fill((0, 0, 0))
+    screen.blit(text, (150, 150))
+    pygame.display.flip()
+    time.sleep(60)
 
 while True:
     for event in pygame.event.get():
@@ -46,6 +63,7 @@ while True:
             if event.key == pygame.K_SPACE:
                 bullet_x = player_x + player_width // 2 - bullet_width // 2
                 bullet_y = player_y
+                pygame.mixer.music.play(0)
                 bullets.append(pygame.Rect(bullet_x, bullet_y, bullet_width, bullet_height))
 
     keys = pygame.key.get_pressed()
@@ -66,19 +84,38 @@ while True:
         enemy_timer = current_time
 
     for enemy in enemies:
+        if score > 10:
+            enemy_speed = 3
         enemy.y += enemy_speed
+        if enemy.y >= screen_height - enemy_height:
+            health-=1
+            enemies.remove(enemy)
+
 
     # Check collisions
     for bullet in bullets[:]:
         for enemy in enemies:
             if check_collision(bullet, enemy):
+                score += 1
                 bullets.remove(bullet)
                 enemies.remove(enemy)
 
     enemies = [enemy for enemy in enemies if enemy.y < screen_height]
 
+    # now print the text
+    text_surface = font.render(
+        f"Score: {score} Health: {health}",
+        True,
+        (255, 255, 255)
+    )
+
+    if health == 0:
+        break
+
     # Fill screen with a color
     screen.fill((0,0,0))
+    screen.blit(text_surface, dest=(20, 20))
+
     pygame.draw.rect(screen, (0, 128, 255), (player_x, player_y, player_width, player_height))
 
     # Draw the bullets
@@ -93,3 +130,4 @@ while True:
     pygame.display.flip()
 
     clock.tick(60)
+show_game_over(screen)
