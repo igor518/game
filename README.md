@@ -1,2 +1,2 @@
-<h1>Simple python shooter game</h1>
+<h1>Alien invasion</h1>
 <p>Python practice project</p>
